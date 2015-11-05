@@ -16,8 +16,6 @@ public class ItemList extends Resource {
 	private List<Item> value;
 	@JsonProperty("@odata.nextLink")
 	private String nextLink;
-	@JsonProperty("@search.approximateCount")
-	private long approximateCount;
 	
 	@JsonCreator
 	public ItemList(@JacksonInject OneDrive oneDrive) {
@@ -30,12 +28,6 @@ public class ItemList extends Resource {
 	public void setNextLink(String nextLink) {
 		this.nextLink = nextLink;
 	}
-	public long getApproximateCount() {
-		return approximateCount;
-	}
-	public void setApproximateCount(long approximateCount) {
-		this.approximateCount = approximateCount;
-	}
 	public List<Item> getValue() {
 		return value;
 	}
@@ -45,6 +37,6 @@ public class ItemList extends Resource {
 	
 	public ItemList nextPage(){
 		Assert.notNull(nextLink, "[nextLink] is required");
-		return getOneDrive().getRestTemplate().getForObject(nextLink, ItemList.class);
+		return getOneDrive().getRestTemplate().getForObject(nextLink, getClass());
 	}
 }

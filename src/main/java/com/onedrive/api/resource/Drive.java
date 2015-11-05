@@ -7,10 +7,9 @@ import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.onedrive.api.OneDrive;
 import com.onedrive.api.resource.facet.Quota;
 import com.onedrive.api.resource.support.IdentitySet;
@@ -66,19 +65,17 @@ public class Drive extends Resource {
 	public void setDataContext(String dataContext) {
 		this.dataContext = dataContext;
 	}
-	@JsonIgnore
-	public static String getDrivePath(String driveId){
+	public static String buildDrivePath(String driveId){
 		return DRIVES_PATH + OneDrive.PATH_SEPARATOR + (StringUtils.isEmpty(driveId)?DEFAULT_DRIVE_ID:driveId);
 	}
-	public String getDrivePath(){
-		return getDrivePath(id);
+	public String buildDrivePath(){
+		return buildDrivePath(id);
 	}
-	@JsonIgnore
-	private Item getItemInternal(String path, Map<String,String> queryParameters){
+	private Item itemInternal(String path, Map<String,String> queryParameters){
 		if (path.charAt(0) != OneDrive.PATH_SEPARATOR.charAt(0)){
 			path = OneDrive.PATH_SEPARATOR + path;
 		}
-		Item item = getOneDrive().getRestTemplate().getForObject(getOneDrive().getUri(getDrivePath()+path, queryParameters), Item.class);
+		Item item = getOneDrive().getRestTemplate().getForObject(getOneDrive().getUri(buildDrivePath()+path, queryParameters), Item.class);
 		item.setDrive(this);
 		return item;
 	}
@@ -93,26 +90,28 @@ public class Drive extends Resource {
 		return root((Map<String,String>) null);
 	}
 	public Item root(Map<String,String> queryParameters){
-		return getItemInternal("root", queryParameters);
+		return itemInternal("root", queryParameters);
 	}
 	public Item root(String itemPath){
 		return root(itemPath, null);
 	}
 	public Item root(String itemPath, Map<String,String> queryParameters){
-		return getItemInternal("root:"+itemPath+":", queryParameters);
+		Assert.notNull(itemPath, "[itemPath] is required");
+		return itemInternal("root:"+itemPath+":", queryParameters);
 	}
 	public Item specialFolder(String name){
 		return specialFolder(name, null);
 	}
 	public Item specialFolder(String name, Map<String,String> queryParameters){
-		return getItemInternal("special"+OneDrive.PATH_SEPARATOR+name, queryParameters);
+		Assert.notNull(name, "[name] is required");
+		return itemInternal("special"+OneDrive.PATH_SEPARATOR+name, queryParameters);
 	}
 	public Item items(String itemId){
 		return items(itemId, null);
 	}
 	public Item items(String itemId, Map<String,String> queryParameters){
-		Assert.notNull(itemId, "The item id is required.");
-		return getItemInternal(Item.getItemPath(itemId), queryParameters);
+		Assert.notNull(itemId, "[itemId] is required");
+		return itemInternal(Item.buildItemPath(itemId), queryParameters);
 	}
 	@Override
 	public String toString() {

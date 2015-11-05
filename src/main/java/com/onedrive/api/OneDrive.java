@@ -216,7 +216,7 @@ public class OneDrive {
 	
 	public Drive drives(String driveId, Map<String,String> queryParameters){
 		Assert.hasText(driveId, "[driveId] is required");
-		Drive drive = getRestTemplate().getForObject(getUri(Drive.getDrivePath(driveId), queryParameters), Drive.class);
+		Drive drive = getRestTemplate().getForObject(getUri(Drive.buildDrivePath(driveId), queryParameters), Drive.class);
 		return drive;
 	}
 	

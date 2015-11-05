@@ -48,7 +48,7 @@ public class AsyncOperationStatus extends Item {
 	}
 
 	public AsyncOperationStatus status(){
-		Assert.notNull(getSourceUrl(), "[source url] is required");
+		Assert.notNull(getSourceUrl(), "[this.sourceUrl] is required");
 		URI uri = null;
 		try {
 			uri = new URI(getSourceUrl());

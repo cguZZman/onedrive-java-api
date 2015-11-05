@@ -3,6 +3,7 @@ package com.onedrive.api.resource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -49,6 +50,7 @@ import com.onedrive.api.resource.support.Error;
 import com.onedrive.api.resource.support.IdentitySet;
 import com.onedrive.api.resource.support.ItemList;
 import com.onedrive.api.resource.support.ItemReference;
+import com.onedrive.api.resource.support.SearchItemList;
 import com.onedrive.api.resource.support.UploadSession;
 
 @JsonInclude(Include.NON_NULL)
@@ -287,38 +289,44 @@ public class Item extends Resource {
 	public void setContext(String context) {
 		this.context = context;
 	}
-	
-	@JsonIgnore
 	public Drive getDrive() {
 		return drive;
 	}
-	@JsonIgnore
 	public void setDrive(Drive drive) {
 		this.drive = drive;
 	}
-
 	protected void initDrive(){
 		if (drive == null){
 			drive = new Drive(getOneDrive());
 		}
 	}
-	@JsonIgnore
-	public static String getItemPath(String itemId){
+	public static String buildItemPath(String itemId){
 		return OneDrive.PATH_SEPARATOR+"items"+OneDrive.PATH_SEPARATOR+itemId;
 	}
-	@JsonIgnore
-	public String getDriveItemPath(){
-		return drive.getDrivePath()+getItemPath(id);
+	public String buildItemPath(){
+		return drive.buildDrivePath()+buildItemPath(id);
 	}
-	@JsonIgnore
-	public String getActionPath(String action){
-		return getDriveItemPath()+OneDrive.PATH_SEPARATOR+action;
+	public URI buildItemUri(Map<String,String> urlParams){
+		return getOneDrive().getUri(buildItemPath(), urlParams);
 	}
-	@JsonIgnore
-	public String getChildrenPath(){
-		return getActionPath("children");
+	public URI buildItemUri(){
+		return buildItemUri(null);
 	}
-	
+	public String buildActionPath(String action){
+		return buildItemPath()+OneDrive.PATH_SEPARATOR+action;
+	}
+	public URI buildActionUri(String action, Map<String,String> urlParams){
+		return getOneDrive().getUri(buildActionPath(action), urlParams);
+	}
+	public String buildChildrenPath(){
+		return buildActionPath("children");
+	}
+	public URI buildChildrenUri(Map<String,String> urlParams){
+		return getOneDrive().getUri(buildChildrenPath(), urlParams);
+	}
+	public URI buildChildrenUri(){
+		return buildChildrenUri(null);
+	}
 	public Item metadata(){
 		return metadata(null);
 	}
@@ -331,22 +339,22 @@ public class Item extends Resource {
 	}
 	public ItemList children(Map<String,String> queryParameters){
 		initDrive();
-		Assert.notNull(id, "The item id is required.");
-		return getOneDrive().getRestTemplate().getForObject(getOneDrive().getUri(getChildrenPath(), queryParameters), ItemList.class);
+		Assert.notNull(id, "[this.id] is required");
+		return getOneDrive().getRestTemplate().getForObject(buildChildrenUri(queryParameters), ItemList.class);
 	}
 	public Item createFolder(String folderName){
 		return createFolder(folderName, null);
 	}
 	public Item createFolder(String folderName, String conflictBehavior){
 		initDrive();
-		Assert.notNull(folderName, "The folderName is required.");
+		Assert.notNull(folderName, "[folderName] is required");
 		Map<String,Object> data = new HashMap<String, Object>();
 		data.put("name", folderName);
 		data.put("folder", new Folder());
 		if (!StringUtils.isEmpty(conflictBehavior)){
 			data.put("@name.conflictBehavior", conflictBehavior);
 		}
-		ResponseEntity<Item> responseItem = getOneDrive().getRestTemplate().postForEntity(getOneDrive().getUri(getChildrenPath(), null), data, Item.class);
+		ResponseEntity<Item> responseItem = getOneDrive().getRestTemplate().postForEntity(buildChildrenUri(), data, Item.class);
 		return responseItem.getBody();
 	}
 	public Item upload(String fileName, InputStream inputStream){
@@ -354,21 +362,21 @@ public class Item extends Resource {
 	}
 	public Item upload(String fileName, InputStream inputStream, String conflictBehavior){
 		initDrive();
-		Assert.notNull(fileName, "The file name is required.");
-		Assert.notNull(inputStream, "The input stream is required.");
+		Assert.notNull(fileName, "[fileName] is required");
+		Assert.notNull(inputStream, "[inputStream] is required");
 		Map<String,String> params = new HashMap<String, String>();
 		if (!StringUtils.isEmpty(conflictBehavior)){
 			params.put("@name.conflictBehavior", conflictBehavior);
 		}
-		String path = getChildrenPath() + OneDrive.PATH_SEPARATOR + fileName + OneDrive.PATH_SEPARATOR + "content";
+		String path = buildChildrenPath() + OneDrive.PATH_SEPARATOR + fileName + OneDrive.PATH_SEPARATOR + "content";
 		ResponseEntity<Item> responseItem = getOneDrive().getRestTemplate().exchange(getOneDrive().getUri(path, params), HttpMethod.PUT, new HttpEntity<InputStreamResource>(new InputStreamResource(inputStream)) , Item.class);
 		return responseItem.getBody();
 	}
 	
 	public Item upload(Item child, InputStream inputStream){
 		initDrive();
-		Assert.notNull(child, "The child item is required.");
-		Assert.notNull(inputStream, "The input stream is required.");
+		Assert.notNull(child, "[child] is required");
+		Assert.notNull(inputStream, "[inputStream] is required");
 		child.setSourceUrl("cid:content");
 		
 		MultiValueMap<String, Object> parts = new LinkedMultiValueMap<String, Object>();
@@ -377,32 +385,32 @@ public class Item extends Resource {
 		
 		MultiValueMap<String, String> headers = new LinkedMultiValueMap<String, String>();
 	    headers.add("Content-Type", "multipart/related");
-		return getOneDrive().getRestTemplate().postForObject(getOneDrive().getUri(getChildrenPath(), null), new HttpEntity<MultiValueMap<String, Object>>(parts, headers), Item.class);
+		return getOneDrive().getRestTemplate().postForObject(buildChildrenUri(), new HttpEntity<MultiValueMap<String, Object>>(parts, headers), Item.class);
 	}
 	
 	public UploadSession uploadSesion(Item child){
 		initDrive();
-		Assert.notNull(child, "The child item is required.");
-		Assert.notNull(child.getName(), "The file name is required.");
+		Assert.notNull(child, "[child] is required");
+		Assert.notNull(child.getName(), "[child.name] is required");
 		MultiValueMap<String, String> headers = new LinkedMultiValueMap<String, String>();
 		if (!StringUtils.isEmpty(child.geteTag())){
 			headers.add("if-match", child.geteTag());
 		}
-		String path = getDriveItemPath()+":"+OneDrive.PATH_SEPARATOR+child.getName()+":/upload.createSession";
+		String path = buildItemPath()+":"+OneDrive.PATH_SEPARATOR+child.getName()+":/upload.createSession";
 		UploadSession session = getOneDrive().getRestTemplate().postForObject(getOneDrive().getUri(path, null), new HttpEntity<Map<String, Item>>(Collections.singletonMap("item", child), headers), UploadSession.class);
 		return session; 
 	}
 	public AsyncOperationStatus uploadFromUrl(String url, String name){
 		initDrive();
-		Assert.notNull(url, "The url is required.");
-		Assert.notNull(name, "The name is required.");
+		Assert.notNull(url, "[url] is required");
+		Assert.notNull(name, "[name] is required");
 		Item item = new Item(getOneDrive());
 		item.setName(name);
 		item.setSourceUrl(url);
 		item.setFile(new File());
 		MultiValueMap<String, String> headers = new LinkedMultiValueMap<String, String>();
 		headers.add("Prefer", "respond-async");
-		ResponseEntity<AsyncOperationStatus> response = getOneDrive().getRestTemplate().exchange(getOneDrive().getUri(getChildrenPath(), null), HttpMethod.POST, new HttpEntity<Item>(item, headers), AsyncOperationStatus.class);
+		ResponseEntity<AsyncOperationStatus> response = getOneDrive().getRestTemplate().exchange(buildChildrenUri(), HttpMethod.POST, new HttpEntity<Item>(item, headers), AsyncOperationStatus.class);
 		AsyncOperationStatus status = response.getBody();
 		if (status == null){
 			status = new AsyncOperationStatus(getOneDrive());
@@ -412,24 +420,24 @@ public class Item extends Resource {
 	}
 	public Optional<Error> delete(){
 		initDrive();
-		Assert.notNull(id, "The item id is required.");
+		Assert.notNull(id, "[this.id] is required");
 		MultiValueMap<String, String> headers = new LinkedMultiValueMap<String, String>();
 		if (!StringUtils.isEmpty(eTag)){
 			headers.add("if-match", eTag);
 		}
-		ResponseEntity<Resource> response = getOneDrive().getRestTemplate().exchange(getOneDrive().getUri(getDriveItemPath(), null), HttpMethod.DELETE, null, Resource.class);
+		ResponseEntity<Resource> response = getOneDrive().getRestTemplate().exchange(buildItemUri(), HttpMethod.DELETE, null, Resource.class);
 		return response.getBody()!=null?Optional.ofNullable(response.getBody().getError()):Optional.empty();
 	}
 	public Item move(String parentPath){
 		initDrive();
-		Assert.notNull(parentPath, "[parentPath] is required.");
+		Assert.notNull(parentPath, "[parentPath] is required");
 		Item request = new Item(getOneDrive());
 		request.setName(getName());
 		request.setParentReference(new ItemReference());
 		request.getParentReference().setPath(Drive.DEFAULT_DRIVE_PATH + OneDrive.PATH_SEPARATOR + "root" + ":" + parentPath);
 		MultiValueMap<String, String> headers = new LinkedMultiValueMap<String, String>();
 		headers.add("X-HTTP-Method-Override", HttpMethod.PATCH.name());
-		ResponseEntity<Item> response = getOneDrive().getRestTemplate().exchange(getOneDrive().getUri(getDriveItemPath(), null), HttpMethod.POST, new HttpEntity<Item>(request,headers), Item.class);
+		ResponseEntity<Item> response = getOneDrive().getRestTemplate().exchange(buildItemUri(), HttpMethod.POST, new HttpEntity<Item>(request,headers), Item.class);
 		return response.getBody(); 
 	}
 	public Item update(){
@@ -439,7 +447,7 @@ public class Item extends Resource {
 		if (!StringUtils.isEmpty(geteTag())){
 			headers.add("if-match", geteTag());
 		}
-		ResponseEntity<Item> response = getOneDrive().getRestTemplate().exchange(getOneDrive().getUri(getDriveItemPath(), null), HttpMethod.POST, new HttpEntity<Item>(this,headers), Item.class);
+		ResponseEntity<Item> response = getOneDrive().getRestTemplate().exchange(buildItemUri(), HttpMethod.POST, new HttpEntity<Item>(this,headers), Item.class);
 		return response.getBody(); 
 	}
 	private Item copy(Item parentItem, String parentPath, String newName){
@@ -453,10 +461,9 @@ public class Item extends Resource {
 		Item request = new Item(getOneDrive());
 		request.setName(newName);
 		request.setParentReference(parentReference);
-		String path = getActionPath("action.copy");
 		MultiValueMap<String, String> headers = new LinkedMultiValueMap<String, String>();
 		headers.add("Prefer", "respond-async");
-		ResponseEntity<AsyncOperationStatus> response = getOneDrive().getRestTemplate().exchange(getOneDrive().getUri(path, null), HttpMethod.POST, new HttpEntity<Item>(request, headers), AsyncOperationStatus.class);
+		ResponseEntity<AsyncOperationStatus> response = getOneDrive().getRestTemplate().exchange(buildActionUri("action.copy", null), HttpMethod.POST, new HttpEntity<Item>(request, headers), AsyncOperationStatus.class);
 		AsyncOperationStatus status = response.getBody();
 		if (status == null){
 			status = new AsyncOperationStatus(getOneDrive());
@@ -465,15 +472,15 @@ public class Item extends Resource {
 		return status;
 	}
 	public Item copy(String parentPath, String newName){
-		Assert.notNull(parentPath, "[parentPath] is required.");
+		Assert.notNull(parentPath, "[parentPath] is required");
 		return copy(null, parentPath, newName);
 	}
 	public Item copy(String parentPath){
 		return copy(parentPath, null);
 	}
 	public Item copy(Item parentItem, String newName){
-		Assert.notNull(parentItem, "[parentItem] is required.");
-		Assert.notNull(parentItem.getId(), "[parentItem.id] is required.");
+		Assert.notNull(parentItem, "[parentItem] is required");
+		Assert.notNull(parentItem.getId(), "[parentItem.id] is required");
 		return copy(parentItem, null, newName);
 	}
 	public Item copy(Item parentItem){
@@ -484,8 +491,7 @@ public class Item extends Resource {
 	}
 	public Resource download(OutputStream os, String rangeHeader){
 		initDrive();
-		String path = getActionPath("content");
-		return getOneDrive().getRestTemplate().execute(getOneDrive().getUri(path, null), HttpMethod.GET,
+		return getOneDrive().getRestTemplate().execute(buildActionUri("content", null), HttpMethod.GET,
 			new RequestCallback() {
 				@Override
 				public void doWithRequest(ClientHttpRequest request) throws IOException {
@@ -517,18 +523,18 @@ public class Item extends Resource {
             output.write(buffer, 0, n);
         }
     }
-	public ItemList search(String query){
+	public SearchItemList search(String query){
 		return search(query, null);
 	}
-	public ItemList search(String query, Map<String,String> queryParameters){
+	public SearchItemList search(String query, Map<String,String> queryParameters){
 		initDrive();
-		Assert.notNull(id, "The item id is required.");
+		Assert.notNull(id, "[this.id] is required.");
 		if (query != null){
 			if (queryParameters == null){
 				queryParameters = new HashMap<String,String>();
 			}
 			queryParameters.put("q", query);
 		}
-		return getOneDrive().getRestTemplate().getForObject(getOneDrive().getUri(getActionPath("view.search"), queryParameters), ItemList.class);
+		return getOneDrive().getRestTemplate().getForObject(buildActionUri("view.search", queryParameters), SearchItemList.class);
 	}
 }
