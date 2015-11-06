@@ -1,5 +1,6 @@
 package com.onedrive.api;
 
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.net.URI;
@@ -331,6 +332,20 @@ public class OneDrive {
 			e.printStackTrace();
 		}
 		*/
-		System.out.println(new Drive(oneDrive).root().search("java").nextPage());
+		//System.out.println(new Drive(oneDrive).root().search("java").nextPage());
+		//System.out.println(new Drive(oneDrive).root().changes());
+		//System.out.println(new Item(oneDrive, "C899E30C041941B5!8060").thumbnails());
+		/*
+		try {
+			System.out.println(new Item(oneDrive, "C899E30C041941B5!8060").thumbnail("0", "small", new FileOutputStream("C:/Users/carlos/Downloads/download-thumb.jpg")));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+		*/
+		try {
+			new Item(oneDrive, "C899E30C041941B5!311781").thumbnailUpload(new FileInputStream("C:/Users/carlos/Downloads/447983.jpg"));
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
 	}
 }

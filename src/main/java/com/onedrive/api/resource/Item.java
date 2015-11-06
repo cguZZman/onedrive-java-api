@@ -46,11 +46,15 @@ import com.onedrive.api.resource.facet.SharingLink;
 import com.onedrive.api.resource.facet.SpecialFolder;
 import com.onedrive.api.resource.facet.Video;
 import com.onedrive.api.resource.support.AsyncOperationStatus;
+import com.onedrive.api.resource.support.ChangesItemList;
 import com.onedrive.api.resource.support.Error;
 import com.onedrive.api.resource.support.IdentitySet;
 import com.onedrive.api.resource.support.ItemList;
 import com.onedrive.api.resource.support.ItemReference;
 import com.onedrive.api.resource.support.SearchItemList;
+import com.onedrive.api.resource.support.Thumbnail;
+import com.onedrive.api.resource.support.ThumbnailSet;
+import com.onedrive.api.resource.support.ThumbnailSetList;
 import com.onedrive.api.resource.support.UploadSession;
 
 @JsonInclude(Include.NON_NULL)
@@ -304,6 +308,7 @@ public class Item extends Resource {
 		return OneDrive.PATH_SEPARATOR+"items"+OneDrive.PATH_SEPARATOR+itemId;
 	}
 	public String buildItemPath(){
+		initDrive();
 		return drive.buildDrivePath()+buildItemPath(id);
 	}
 	public URI buildItemUri(Map<String,String> urlParams){
@@ -338,7 +343,6 @@ public class Item extends Resource {
 		return children(null);
 	}
 	public ItemList children(Map<String,String> queryParameters){
-		initDrive();
 		Assert.notNull(id, "[this.id] is required");
 		return getOneDrive().getRestTemplate().getForObject(buildChildrenUri(queryParameters), ItemList.class);
 	}
@@ -346,7 +350,6 @@ public class Item extends Resource {
 		return createFolder(folderName, null);
 	}
 	public Item createFolder(String folderName, String conflictBehavior){
-		initDrive();
 		Assert.notNull(folderName, "[folderName] is required");
 		Map<String,Object> data = new HashMap<String, Object>();
 		data.put("name", folderName);
@@ -361,7 +364,6 @@ public class Item extends Resource {
 		return upload(fileName, inputStream, null);
 	}
 	public Item upload(String fileName, InputStream inputStream, String conflictBehavior){
-		initDrive();
 		Assert.notNull(fileName, "[fileName] is required");
 		Assert.notNull(inputStream, "[inputStream] is required");
 		Map<String,String> params = new HashMap<String, String>();
@@ -374,7 +376,6 @@ public class Item extends Resource {
 	}
 	
 	public Item upload(Item child, InputStream inputStream){
-		initDrive();
 		Assert.notNull(child, "[child] is required");
 		Assert.notNull(inputStream, "[inputStream] is required");
 		child.setSourceUrl("cid:content");
@@ -389,7 +390,6 @@ public class Item extends Resource {
 	}
 	
 	public UploadSession uploadSesion(Item child){
-		initDrive();
 		Assert.notNull(child, "[child] is required");
 		Assert.notNull(child.getName(), "[child.name] is required");
 		MultiValueMap<String, String> headers = new LinkedMultiValueMap<String, String>();
@@ -401,7 +401,6 @@ public class Item extends Resource {
 		return session; 
 	}
 	public AsyncOperationStatus uploadFromUrl(String url, String name){
-		initDrive();
 		Assert.notNull(url, "[url] is required");
 		Assert.notNull(name, "[name] is required");
 		Item item = new Item(getOneDrive());
@@ -419,7 +418,6 @@ public class Item extends Resource {
 		return status;
 	}
 	public Optional<Error> delete(){
-		initDrive();
 		Assert.notNull(id, "[this.id] is required");
 		MultiValueMap<String, String> headers = new LinkedMultiValueMap<String, String>();
 		if (!StringUtils.isEmpty(eTag)){
@@ -429,7 +427,6 @@ public class Item extends Resource {
 		return response.getBody()!=null?Optional.ofNullable(response.getBody().getError()):Optional.empty();
 	}
 	public Item move(String parentPath){
-		initDrive();
 		Assert.notNull(parentPath, "[parentPath] is required");
 		Item request = new Item(getOneDrive());
 		request.setName(getName());
@@ -441,7 +438,6 @@ public class Item extends Resource {
 		return response.getBody(); 
 	}
 	public Item update(){
-		initDrive();
 		MultiValueMap<String, String> headers = new LinkedMultiValueMap<String, String>();
 		headers.add("X-HTTP-Method-Override", HttpMethod.PATCH.name());
 		if (!StringUtils.isEmpty(geteTag())){
@@ -451,7 +447,6 @@ public class Item extends Resource {
 		return response.getBody(); 
 	}
 	private Item copy(Item parentItem, String parentPath, String newName){
-		initDrive();
 		ItemReference parentReference = new ItemReference();
 		if (parentItem != null){
 			parentReference.setId(parentItem.getId());
@@ -486,11 +481,10 @@ public class Item extends Resource {
 	public Item copy(Item parentItem){
 		return copy(parentItem, null);
 	}
-	public Resource download(OutputStream os){
-		return download(os, null);
+	public Resource download(OutputStream outputStream){
+		return download(outputStream, null);
 	}
-	public Resource download(OutputStream os, String rangeHeader){
-		initDrive();
+	public Resource download(OutputStream outputStream, String rangeHeader){
 		return getOneDrive().getRestTemplate().execute(buildActionUri("content", null), HttpMethod.GET,
 			new RequestCallback() {
 				@Override
@@ -507,7 +501,7 @@ public class Item extends Resource {
 					HttpMessageConverterExtractor<Resource> extractor = new HttpMessageConverterExtractor<Resource>(Item.class, getOneDrive().getRestTemplate().getMessageConverters());
 					resource = extractor.extractData(response);
 				} else {
-					copyStream(response.getBody(), os);
+					copyStream(response.getBody(), outputStream);
 					resource = new Resource(getOneDrive());
 				}
 				resource.setContentRange(response.getHeaders().getFirst(Resource.CONTENT_RANGE_HEADER));
@@ -527,8 +521,7 @@ public class Item extends Resource {
 		return search(query, null);
 	}
 	public SearchItemList search(String query, Map<String,String> queryParameters){
-		initDrive();
-		Assert.notNull(id, "[this.id] is required.");
+		Assert.notNull(id, "[this.id] is required");
 		if (query != null){
 			if (queryParameters == null){
 				queryParameters = new HashMap<String,String>();
@@ -536,5 +529,65 @@ public class Item extends Resource {
 			queryParameters.put("q", query);
 		}
 		return getOneDrive().getRestTemplate().getForObject(buildActionUri("view.search", queryParameters), SearchItemList.class);
+	}
+	public ChangesItemList changes(){
+		return changes(null, 0);
+	}
+	public ChangesItemList changes(String token, long top){
+		Assert.notNull(id, "[this.id] is required");
+		Map<String,String> queryParameters = new HashMap<String,String>();
+		if (token != null){
+			queryParameters.put("token", token);
+		}
+		if (top > 0){
+			queryParameters.put("top", top+"");
+		}
+		return getOneDrive().getRestTemplate().getForObject(buildActionUri("view.delta", queryParameters), ChangesItemList.class);
+	}
+	public ThumbnailSetList thumbnails(){
+		return thumbnails(null);
+	}
+	public ThumbnailSetList thumbnails(Map<String,String> queryParameters){
+		Assert.notNull(id, "[this.id] is required");
+		ThumbnailSetList list = getOneDrive().getRestTemplate().getForObject(buildActionUri("thumbnails", queryParameters), ThumbnailSetList.class);
+		if (list != null && list.getValue() != null){
+			for  (ThumbnailSet ts : list.getValue()){
+				ts.setItem(this);
+			}
+		}
+		return list;
+	}
+	public Thumbnail thumbnail(String thumbId, String size){
+		Assert.notNull(id, "[this.id] is required");
+		Assert.notNull(thumbId, "[thumbId] is required");
+		Assert.notNull(size, "[size] is required");
+		return getOneDrive().getRestTemplate().getForObject(buildActionUri("thumbnails"+OneDrive.PATH_SEPARATOR+thumbId+OneDrive.PATH_SEPARATOR+size, null), Thumbnail.class);
+	}
+	public Resource thumbnail(String thumbId, String size, OutputStream outputStream){
+		Assert.notNull(id, "[this.id] is required");
+		Assert.notNull(thumbId, "[thumbId] is required");
+		Assert.notNull(size, "[size] is required");
+		return getOneDrive().getRestTemplate().execute(buildActionUri("thumbnails"+OneDrive.PATH_SEPARATOR+thumbId+OneDrive.PATH_SEPARATOR+size+OneDrive.PATH_SEPARATOR+"content", null), HttpMethod.GET,
+			null, 
+			new ResponseExtractor<Resource>() {
+				@Override
+				public Resource extractData(ClientHttpResponse response) throws IOException {
+					Resource resource = null;
+					if (response.getStatusCode().value() >= 400){
+						HttpMessageConverterExtractor<Resource> extractor = new HttpMessageConverterExtractor<Resource>(Item.class, getOneDrive().getRestTemplate().getMessageConverters());
+						resource = extractor.extractData(response);
+					} else {
+						copyStream(response.getBody(), outputStream);
+						resource = new Resource(getOneDrive());
+					}
+					return resource;
+				}
+			}
+		);
+	}
+	public void thumbnailUpload(InputStream inputStream){
+		Assert.notNull(id, "[this.id] is required");
+		Assert.notNull(inputStream, "[inputStream] is required");
+		getOneDrive().getRestTemplate().exchange(buildActionUri("thumbnails"+OneDrive.PATH_SEPARATOR+"0"+OneDrive.PATH_SEPARATOR+"source"+OneDrive.PATH_SEPARATOR+"content", null), HttpMethod.PUT, new HttpEntity<InputStreamResource>(new InputStreamResource(inputStream)), Object.class);
 	}
 }
