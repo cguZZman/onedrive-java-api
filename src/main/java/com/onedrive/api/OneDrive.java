@@ -59,6 +59,7 @@ import com.onedrive.api.internal.InternalTokenServices;
 import com.onedrive.api.internal.MultipartRelatedHttpMessageConverter;
 import com.onedrive.api.resource.Drive;
 import com.onedrive.api.resource.Item;
+import com.onedrive.api.resource.facet.SharingLink;
 import com.onedrive.api.resource.support.AsyncOperationStatus;
 import com.onedrive.api.resource.support.DriveList;
 import com.onedrive.api.resource.support.UploadSession;
@@ -363,10 +364,13 @@ public class OneDrive {
 			e.printStackTrace();
 		}
 		*/
+		/*
 		try {
 			new Item(oneDrive, "C899E30C041941B5!311781").thumbnailUpload(new FileInputStream("C:/Users/carlos/Downloads/447983.jpg"));
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
+		*/
+		System.out.println(new Item(oneDrive, "C899E30C041941B5!312752").createLink(SharingLink.TYPE_VIEW));
 	}
 }

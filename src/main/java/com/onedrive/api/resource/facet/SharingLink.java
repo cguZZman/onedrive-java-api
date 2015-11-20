@@ -54,5 +54,9 @@ public class SharingLink {
 	public void setApplication(Identity application) {
 		this.application = application;
 	}
-	
+	@Override
+	public String toString() {
+		return "SharingLink [token=" + token + ", webUrl=" + webUrl + ", type=" + type + ", application=" + application
+				+ "]";
+	}
 }

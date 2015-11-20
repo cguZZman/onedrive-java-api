@@ -56,4 +56,8 @@ public class Permission {
 	public void setInheritedFrom(ItemReference inheritedFrom) {
 		this.inheritedFrom = inheritedFrom;
 	}
+	@Override
+	public String toString() {
+		return "Permission [id=" + id + ", role=" + role + ", link=" + link + ", inheritedFrom=" + inheritedFrom + "]";
+	}
 }

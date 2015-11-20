@@ -611,4 +611,10 @@ public class Item extends Resource {
 		Assert.notNull(inputStream, "[inputStream] is required");
 		getOneDrive().getRestTemplate().exchange(buildActionUri("thumbnails"+OneDrive.PATH_SEPARATOR+"0"+OneDrive.PATH_SEPARATOR+"source"+OneDrive.PATH_SEPARATOR+"content", null), HttpMethod.PUT, new HttpEntity<InputStreamResource>(new InputStreamResource(inputStream)), Object.class);
 	}
+	public Permission createLink(String type){
+		Assert.notNull(type, "[type] is required");
+		Map<String,String> request = new HashMap<String,String>();
+		request.put("type", type);
+		return getOneDrive().getRestTemplate().postForObject(buildActionUri("action.createLink", null), request, Permission.class);
+	}
 }
