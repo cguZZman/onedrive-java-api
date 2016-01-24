@@ -31,6 +31,8 @@ import com.onedrive.api.resource.support.Error;
 @JsonInclude(Include.NON_NULL)
 public class Resource {
 	public static final String CONTENT_RANGE_HEADER = "Content-Range";
+	
+	private String id;
 	@JsonIgnore
 	private OneDrive oneDrive;
 	private Error error;
@@ -59,7 +61,12 @@ public class Resource {
 	public void setContentRange(String contentRange) {
 		this.contentRange = contentRange;
 	}
-	
+	public String getId() {
+		return id;
+	}
+	public void setId(String id) {
+		this.id = id;
+	}
 	@Override
 	public String toString() {
 		try {

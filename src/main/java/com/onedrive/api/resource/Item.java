@@ -82,7 +82,6 @@ import com.onedrive.api.resource.support.UploadSession;
 public class Item extends Resource {
 	private static final int DEFAULT_BUFFER_SIZE = 1024 * 4;
 	
-	private String id;
 	private String name;
 	private String eTag;
 	private String cTag;
@@ -134,12 +133,6 @@ public class Item extends Resource {
 		setId(id);
 	}
 	
-	public String getId() {
-		return id;
-	}
-	public void setId(String id) {
-		this.id = id;
-	}
 	public String getName() {
 		return name;
 	}
@@ -330,7 +323,7 @@ public class Item extends Resource {
 	}
 	public String buildItemPath(){
 		initDrive();
-		return drive.buildDrivePath()+buildItemPath(id);
+		return drive.buildDrivePath()+buildItemPath(getId());
 	}
 	public URI buildItemUri(Map<String,String> urlParams){
 		return getOneDrive().getUri(buildItemPath(), urlParams);
@@ -358,13 +351,13 @@ public class Item extends Resource {
 	}
 	public Item metadata(Map<String,String> queryParameters){
 		initDrive();
-		return getDrive().items(id, queryParameters);
+		return getDrive().items(getId(), queryParameters);
 	}
 	public ItemList children(){
 		return children(null);
 	}
 	public ItemList children(Map<String,String> queryParameters){
-		Assert.notNull(id, "[this.id] is required");
+		Assert.notNull(getId(), "[this.id] is required");
 		return getOneDrive().getRestTemplate().getForObject(buildChildrenUri(queryParameters), ItemList.class);
 	}
 	public Item createFolder(String folderName){
@@ -439,7 +432,7 @@ public class Item extends Resource {
 		return status;
 	}
 	public Optional<Error> delete(){
-		Assert.notNull(id, "[this.id] is required");
+		Assert.notNull(getId(), "[this.id] is required");
 		MultiValueMap<String, String> headers = new LinkedMultiValueMap<String, String>();
 		if (!StringUtils.isEmpty(eTag)){
 			headers.add("if-match", eTag);
@@ -542,7 +535,7 @@ public class Item extends Resource {
 		return search(query, null);
 	}
 	public SearchItemList search(String query, Map<String,String> queryParameters){
-		Assert.notNull(id, "[this.id] is required");
+		Assert.notNull(getId(), "[this.id] is required");
 		if (query != null){
 			if (queryParameters == null){
 				queryParameters = new HashMap<String,String>();
@@ -555,7 +548,7 @@ public class Item extends Resource {
 		return changes(null, 0);
 	}
 	public ChangesItemList changes(String token, long top){
-		Assert.notNull(id, "[this.id] is required");
+		Assert.notNull(getId(), "[this.id] is required");
 		Map<String,String> queryParameters = new HashMap<String,String>();
 		if (token != null){
 			queryParameters.put("token", token);
@@ -569,7 +562,7 @@ public class Item extends Resource {
 		return thumbnails(null);
 	}
 	public ThumbnailSetList thumbnails(Map<String,String> queryParameters){
-		Assert.notNull(id, "[this.id] is required");
+		Assert.notNull(getId(), "[this.id] is required");
 		ThumbnailSetList list = getOneDrive().getRestTemplate().getForObject(buildActionUri("thumbnails", queryParameters), ThumbnailSetList.class);
 		if (list != null && list.getValue() != null){
 			for  (ThumbnailSet ts : list.getValue()){
@@ -579,13 +572,13 @@ public class Item extends Resource {
 		return list;
 	}
 	public Thumbnail thumbnail(String thumbId, String size){
-		Assert.notNull(id, "[this.id] is required");
+		Assert.notNull(getId(), "[this.id] is required");
 		Assert.notNull(thumbId, "[thumbId] is required");
 		Assert.notNull(size, "[size] is required");
 		return getOneDrive().getRestTemplate().getForObject(buildActionUri("thumbnails"+OneDrive.PATH_SEPARATOR+thumbId+OneDrive.PATH_SEPARATOR+size, null), Thumbnail.class);
 	}
 	public Resource thumbnail(String thumbId, String size, OutputStream outputStream){
-		Assert.notNull(id, "[this.id] is required");
+		Assert.notNull(getId(), "[this.id] is required");
 		Assert.notNull(thumbId, "[thumbId] is required");
 		Assert.notNull(size, "[size] is required");
 		return getOneDrive().getRestTemplate().execute(buildActionUri("thumbnails"+OneDrive.PATH_SEPARATOR+thumbId+OneDrive.PATH_SEPARATOR+size+OneDrive.PATH_SEPARATOR+"content", null), HttpMethod.GET,
@@ -607,7 +600,7 @@ public class Item extends Resource {
 		);
 	}
 	public void thumbnailUpload(InputStream inputStream){
-		Assert.notNull(id, "[this.id] is required");
+		Assert.notNull(getId(), "[this.id] is required");
 		Assert.notNull(inputStream, "[inputStream] is required");
 		getOneDrive().getRestTemplate().exchange(buildActionUri("thumbnails"+OneDrive.PATH_SEPARATOR+"0"+OneDrive.PATH_SEPARATOR+"source"+OneDrive.PATH_SEPARATOR+"content", null), HttpMethod.PUT, new HttpEntity<InputStreamResource>(new InputStreamResource(inputStream)), Object.class);
 	}

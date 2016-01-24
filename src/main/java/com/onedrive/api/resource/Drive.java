@@ -44,7 +44,6 @@ public class Drive extends Resource {
 	public static final String DEFAULT_DRIVE_ID = "me";
 	public static final String DRIVES_PATH = "/drives";
 	
-	private String id;
 	private String driveType;
 	private IdentitySet owner;
 	private Quota quota;
@@ -55,12 +54,6 @@ public class Drive extends Resource {
 	public Drive(@JacksonInject OneDrive oneDrive) {
 		super(oneDrive);
 		Assert.notNull(oneDrive, "[oneDrive] is required");
-	}
-	public String getId() {
-		return id;
-	}
-	public void setId(String id) {
-		this.id = id;
 	}
 	public String getDriveType() {
 		return driveType;
@@ -90,7 +83,7 @@ public class Drive extends Resource {
 		return DRIVES_PATH + OneDrive.PATH_SEPARATOR + (StringUtils.isEmpty(driveId)?DEFAULT_DRIVE_ID:driveId);
 	}
 	public String buildDrivePath(){
-		return buildDrivePath(id);
+		return buildDrivePath(getId());
 	}
 	private Item itemInternal(String path, Map<String,String> queryParameters){
 		if (path.charAt(0) != OneDrive.PATH_SEPARATOR.charAt(0)){
@@ -105,7 +98,7 @@ public class Drive extends Resource {
 		return metadata(null);
 	}
 	public Drive metadata(Map<String,String> queryParameters){
-		return getOneDrive().drives(StringUtils.isEmpty(id)?DEFAULT_DRIVE_ID:id, queryParameters);
+		return getOneDrive().drive(StringUtils.isEmpty(getId())?DEFAULT_DRIVE_ID:getId(), queryParameters);
 	}
 	public Item root(){
 		return root((Map<String,String>) null);
@@ -136,7 +129,7 @@ public class Drive extends Resource {
 	}
 	@Override
 	public String toString() {
-		return "Drive [id=" + id + ", driveType=" + driveType + ", owner=" + owner + ", quota=" + quota
+		return "Drive [id=" + getId() + ", driveType=" + driveType + ", owner=" + owner + ", quota=" + quota
 				+ ", dataContext=" + dataContext + "]";
 	}
 }
