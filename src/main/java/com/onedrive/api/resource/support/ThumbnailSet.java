@@ -85,12 +85,12 @@ public class ThumbnailSet extends Resource {
 		Assert.notNull(id, "[this.id] is required");
 		Assert.notNull(item, "[this.item] is required");
 		Assert.notNull(item.getId(), "[this.item.id] is required");
-		return item.thumbnail(id, size);
+		return null;//item.thumbnail(id, size);
 	}
 	public Resource download(String size, OutputStream outputStream){
 		Assert.notNull(id, "[this.id] is required");
 		Assert.notNull(item, "[this.item] is required");
 		Assert.notNull(item.getId(), "[this.item.id] is required");
-		return item.thumbnail(id, size, outputStream);
+		return null;//item.thumbnail(id, size, outputStream);
 	}
 }

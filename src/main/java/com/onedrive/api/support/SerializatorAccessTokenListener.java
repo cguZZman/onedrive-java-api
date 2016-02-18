@@ -33,15 +33,15 @@ import com.onedrive.api.OneDrive;
 
 public class SerializatorAccessTokenListener implements AccessTokenListener {
 	private static final String EMPTY_STRING = "";
-	private static final String ACCESS_TOKEN_EXTENSION = ".atk";
-	private static final String DEFAULT_ACCESS_TOKEN_FILE_NAME = "default";
+	protected static final String ACCESS_TOKEN_EXTENSION = ".atk";
+	protected static final String DEFAULT_ACCESS_TOKEN_FILE_NAME = "default";
 	private static final String DEFAULT_APPLICATION_FOLDER = System.getProperty("user.home", EMPTY_STRING)
 			+ File.separator + ".onedrive";
 
 	private HashMap<String, String> tokens = new HashMap<String, String>();
 	
-	private String getFileName(OneDrive reference){
-		return (reference.getId() != null?reference.getId():DEFAULT_ACCESS_TOKEN_FILE_NAME) + ACCESS_TOKEN_EXTENSION;
+	protected String getFileName(OneDrive reference){
+		return DEFAULT_ACCESS_TOKEN_FILE_NAME + ACCESS_TOKEN_EXTENSION;
 	}
 	
 	public void onAccessTokenReceived(OneDrive reference, AccessToken accessToken) {

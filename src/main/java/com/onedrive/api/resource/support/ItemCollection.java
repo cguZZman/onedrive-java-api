@@ -21,18 +21,14 @@
  *******************************************************************************/
 package com.onedrive.api.resource.support;
 
-import java.util.List;
+import com.fasterxml.jackson.annotation.JacksonInject;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.onedrive.api.OneDrive;
 
-import com.onedrive.api.resource.Drive;
-
-public class DriveList {
-	private List<Drive> value;
-
-	public List<Drive> getValue() {
-		return value;
-	}
-
-	public void setValue(List<Drive> value) {
-		this.value = value;
+public class ItemCollection extends BaseCollection<ItemCollection> {
+	
+	@JsonCreator
+	public ItemCollection(@JacksonInject OneDrive oneDrive) {
+		super(oneDrive);
 	}
 }

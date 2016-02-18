@@ -25,31 +25,29 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.Assert;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.onedrive.api.OneDrive;
-import com.onedrive.api.resource.Item;
 import com.onedrive.api.resource.Resource;
 
 @JsonInclude(Include.NON_NULL)
-public class UploadSession extends Item {
+public class UploadSession extends Resource {
 	private String uploadUrl;
 	private Date expirationDateTime;
 	private List<String> nextExpectedRanges;
+	private boolean complete;
 
 	@JsonCreator
 	public UploadSession(@JacksonInject OneDrive oneDrive) {
@@ -74,8 +72,11 @@ public class UploadSession extends Item {
 	public void setNextExpectedRanges(List<String> nextExpectedRanges) {
 		this.nextExpectedRanges = nextExpectedRanges;
 	}
-	@JsonIgnore
-	private URI getUploadUri(){
+	public boolean isComplete() {
+		return complete;
+	}
+
+	private URI uploadUri(){
 		try {
 			return new URI(uploadUrl);
 		} catch (URISyntaxException e) {
@@ -87,24 +88,17 @@ public class UploadSession extends Item {
 		Assert.notNull(data, "The data is required.");
 		MultiValueMap<String, String> headers = new LinkedMultiValueMap<String, String>();
 		headers.add("Content-Range", "bytes " + startIndex+"-"+endIndex+"/"+totalSize);
-		System.out.println(headers);
-		ResponseEntity<UploadSession> response = getOneDrive().getRestTemplate().exchange(getUploadUri(), HttpMethod.PUT, new HttpEntity<ByteArrayResource>(new ByteArrayResource(data), headers), UploadSession.class);
+		ResponseEntity<UploadSession> response = getOneDrive().getRestTemplate().exchange(uploadUri(), HttpMethod.PUT, new HttpEntity<ByteArrayResource>(new ByteArrayResource(data), headers), UploadSession.class);
 		UploadSession session = response.getBody();
 		session.setUploadUrl(uploadUrl);
+		session.complete = response.getStatusCode().equals(HttpStatus.CREATED);
 		return session;
 	}
-	public Optional<Error> delete(){
-		initDrive();
-		if (StringUtils.isEmpty(getId()) && !StringUtils.isEmpty(uploadUrl)){
-			ResponseEntity<Resource> response = getOneDrive().getRestTemplate().exchange(getUploadUri(), HttpMethod.DELETE, null, Resource.class);
-			return response.getBody()!=null?Optional.ofNullable(response.getBody().getError()):Optional.empty();
-		} else {
-			return super.delete();
-		}
+	public void delete(){
+		getOneDrive().getRestTemplate().delete(uploadUri());
 	}
 	public UploadSession status(){
-		initDrive();
-		UploadSession session = getOneDrive().getRestTemplate().getForObject(getUploadUri(), UploadSession.class);
+		UploadSession session = getOneDrive().getRestTemplate().getForObject(uploadUri(), UploadSession.class);
 		session.setUploadUrl(uploadUrl);
 		return session;
 	}

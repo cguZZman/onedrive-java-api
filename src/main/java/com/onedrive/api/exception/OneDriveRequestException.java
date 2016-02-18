@@ -26,33 +26,15 @@ import org.springframework.http.HttpStatus;
 
 import com.onedrive.api.resource.support.ErrorResponse;
 
-public class OneDriveException extends RuntimeException {
-	private static final long serialVersionUID = 5052702544600327914L;
-	
-	private ErrorResponse errorResponse;
-	private HttpHeaders headers;
-	private HttpStatus status;
-	
-	public OneDriveException(ErrorResponse errorResponse, HttpHeaders headers, HttpStatus status) {
-		this(errorResponse, headers, status, null);
-	}
-	
-	public OneDriveException(ErrorResponse errorResponse, HttpHeaders headers, HttpStatus status, Throwable cause) {
-		super(status.value() + " [" + status.getReasonPhrase() + "] " + errorResponse.toString(), cause);
-		this.errorResponse = errorResponse;
-		this.headers = headers;
-		this.status = status;
+public class OneDriveRequestException extends OneDriveException {
+	private static final long serialVersionUID = 4895924418507974290L;
+
+	public OneDriveRequestException(ErrorResponse errorResponse, HttpHeaders headers, HttpStatus status,
+			Throwable cause) {
+		super(errorResponse, headers, status, cause);
 	}
 
-	public ErrorResponse getErrorResponse() {
-		return errorResponse;
-	}
-
-	public HttpHeaders getHeaders() {
-		return headers;
-	}
-
-	public HttpStatus getStatus() {
-		return status;
+	public OneDriveRequestException(ErrorResponse errorResponse, HttpHeaders headers, HttpStatus status) {
+		super(errorResponse, headers, status);
 	}
 }

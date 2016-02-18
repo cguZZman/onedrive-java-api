@@ -19,59 +19,50 @@
  * Created on Aug 1, 2015
  * @author: Carlos Guzman (cguZZman) carlosguzmang@hotmail.com
  *******************************************************************************/
-package com.onedrive.api.resource;
+package com.onedrive.api.resource.support;
+
+import java.lang.reflect.ParameterizedType;
+import java.util.List;
 
 import org.springframework.util.Assert;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.onedrive.api.OneDrive;
-import com.onedrive.api.resource.facet.Quota;
-import com.onedrive.api.resource.support.IdentitySet;
+import com.onedrive.api.resource.Item;
+import com.onedrive.api.resource.Resource;
 
-@JsonInclude(Include.NON_NULL)
-public class Drive extends Resource {
-	public static final String DRIVE_TYPE_PERSONAL = "personal";
-	public static final String DRIVE_TYPE_BUSINESS = "business";
+public class BaseCollection<T extends BaseCollection<?>> extends Resource {
 	
-	private String driveType;
-	private IdentitySet owner;
-	private Quota quota;
+	private List<Item> value;
+	@JsonProperty("@odata.nextLink")
+	private String nextLink;
 	
-	@JsonProperty("@odata.context")
-	private String dataContext;
+	private Class<T> type;
 	
+	@SuppressWarnings("unchecked")
 	@JsonCreator
-	public Drive(@JacksonInject OneDrive oneDrive) {
+	public BaseCollection(@JacksonInject OneDrive oneDrive) {
 		super(oneDrive);
 		Assert.notNull(oneDrive, "[oneDrive] is required");
+		this.type = (Class<T>) ((ParameterizedType)getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+	}
+	public String getNextLink() {
+		return nextLink;
+	}
+	public void setNextLink(String nextLink) {
+		this.nextLink = nextLink;
+	}
+	public List<Item> getValue() {
+		return value;
+	}
+	public void setValue(List<Item> value) {
+		this.value = value;
 	}
 	
-	public String getDriveType() {
-		return driveType;
-	}
-	public void setDriveType(String driveType) {
-		this.driveType = driveType;
-	}
-	public IdentitySet getOwner() {
-		return owner;
-	}
-	public void setOwner(IdentitySet owner) {
-		this.owner = owner;
-	}
-	public Quota getQuota() {
-		return quota;
-	}
-	public void setQuota(Quota quota) {
-		this.quota = quota;
-	}
-	public String getDataContext() {
-		return dataContext;
-	}
-	public void setDataContext(String dataContext) {
-		this.dataContext = dataContext;
+	public T nextPage(){
+		Assert.notNull(nextLink, "[nextLink] is required");
+		return getOneDrive().getRestTemplate().getForObject(nextLink, type);
 	}
 }

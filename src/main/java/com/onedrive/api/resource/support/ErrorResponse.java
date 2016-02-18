@@ -19,40 +19,35 @@
  * Created on Aug 1, 2015
  * @author: Carlos Guzman (cguZZman) carlosguzmang@hotmail.com
  *******************************************************************************/
-package com.onedrive.api.exception;
+package com.onedrive.api.resource.support;
 
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
+import com.fasterxml.jackson.annotation.JacksonInject;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.onedrive.api.OneDrive;
+import com.onedrive.api.resource.Resource;
 
-import com.onedrive.api.resource.support.ErrorResponse;
+@JsonInclude(Include.NON_NULL)
+public class ErrorResponse extends Resource {
 
-public class OneDriveException extends RuntimeException {
-	private static final long serialVersionUID = 5052702544600327914L;
+	private Error error;
 	
-	private ErrorResponse errorResponse;
-	private HttpHeaders headers;
-	private HttpStatus status;
-	
-	public OneDriveException(ErrorResponse errorResponse, HttpHeaders headers, HttpStatus status) {
-		this(errorResponse, headers, status, null);
+	public ErrorResponse(){
+		super(null);
 	}
 	
-	public OneDriveException(ErrorResponse errorResponse, HttpHeaders headers, HttpStatus status, Throwable cause) {
-		super(status.value() + " [" + status.getReasonPhrase() + "] " + errorResponse.toString(), cause);
-		this.errorResponse = errorResponse;
-		this.headers = headers;
-		this.status = status;
+	@JsonCreator
+	public ErrorResponse(@JacksonInject OneDrive oneDrive) {
+		super(oneDrive);
 	}
 
-	public ErrorResponse getErrorResponse() {
-		return errorResponse;
+	public Error getError() {
+		return error;
 	}
 
-	public HttpHeaders getHeaders() {
-		return headers;
+	public void setError(Error error) {
+		this.error = error;
 	}
-
-	public HttpStatus getStatus() {
-		return status;
-	}
+	
 }

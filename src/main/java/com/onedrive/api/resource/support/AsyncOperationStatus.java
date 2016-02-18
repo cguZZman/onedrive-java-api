@@ -23,25 +23,24 @@ package com.onedrive.api.resource.support;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Optional;
 
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.onedrive.api.OneDrive;
-import com.onedrive.api.resource.Item;
+import com.onedrive.api.resource.Resource;
 
 @JsonInclude(Include.NON_NULL)
-public class AsyncOperationStatus extends Item {
+public class AsyncOperationStatus extends Resource {
 	private String operation;
 	private Double percentageComplete;
 	private String status;
+	private String monitorUrl;
 
 	@JsonCreator
 	public AsyncOperationStatus(@JacksonInject OneDrive oneDrive) {
@@ -67,36 +66,38 @@ public class AsyncOperationStatus extends Item {
 	public void setStatus(String status) {
 		this.status = status;
 	}
+	
+	public String getMonitorUrl() {
+		return monitorUrl;
+	}
+
+	public void setMonitorUrl(String monitorUrl) {
+		this.monitorUrl = monitorUrl;
+	}
 
 	public AsyncOperationStatus status(){
-		Assert.notNull(getSourceUrl(), "[this.sourceUrl] is required");
+		Assert.notNull(monitorUrl, "[monitorUrl] is required");
 		URI uri = null;
 		try {
-			uri = new URI(getSourceUrl());
+			uri = new URI(monitorUrl);
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
 		}
 		ResponseEntity<AsyncOperationStatus> response = getOneDrive().getRestTemplate().exchange(uri, HttpMethod.GET, null, AsyncOperationStatus.class);
-		AsyncOperationStatus status = response.getBody();
-		if (status == null){
-			status = new AsyncOperationStatus(getOneDrive());
+		AsyncOperationStatus monitor = response.getBody();
+		if (monitor == null){
+			monitor = new AsyncOperationStatus(getOneDrive());
 		}
-		return response.getBody();
+		monitor.setMonitorUrl(monitorUrl);
+		return monitor;
 	}
 	
-	public Optional<Error> delete(){
-		initDrive();
-		URI uri = null;
+	public void delete(){
 		try {
-			uri = new URI(getSourceUrl());
+			URI uri = new URI(getMonitorUrl());
+			getOneDrive().getRestTemplate().delete(uri);
 		} catch (URISyntaxException e) {
 			e.printStackTrace();
-		}
-		if (StringUtils.isEmpty(getId()) && !StringUtils.isEmpty(getSourceUrl())){
-			ResponseEntity<AsyncOperationStatus> response = getOneDrive().getRestTemplate().exchange(uri, HttpMethod.DELETE, null, AsyncOperationStatus.class);
-			return response.getBody()!=null?Optional.ofNullable(response.getBody().getError()):Optional.empty();
-		} else {
-			return super.delete();
 		}
 	}
 }

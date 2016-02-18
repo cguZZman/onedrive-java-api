@@ -19,20 +19,34 @@
  * Created on Aug 1, 2015
  * @author: Carlos Guzman (cguZZman) carlosguzmang@hotmail.com
  *******************************************************************************/
-package com.onedrive.api.internal;
+package com.onedrive.api.resource.support;
 
-import java.util.Arrays;
-import java.util.Map;
+import com.fasterxml.jackson.annotation.JacksonInject;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.onedrive.api.OneDrive;
 
-import org.springframework.util.LinkedMultiValueMap;
-
-public class InternalQueryParameterMap extends LinkedMultiValueMap<String, String> {
-	private static final long serialVersionUID = 4838283701938990030L;
-	public InternalQueryParameterMap(Map<String,String> params){
-		if (params != null) {
-			for (Entry<String, String> entry : params.entrySet()){
-				put(entry.getKey(), Arrays.asList(entry.getValue()));
-			}
-		}
+public class ChangesItemCollection extends BaseCollection<ChangesItemCollection> {
+	
+	@JsonProperty("@odata.deltaLink")
+	private String deltaLink;
+	@JsonProperty("@delta.token")
+	private String token;
+	
+	@JsonCreator
+	public ChangesItemCollection(@JacksonInject OneDrive oneDrive) {
+		super(oneDrive);
+	}
+	public String getDeltaLink() {
+		return deltaLink;
+	}
+	public void setDeltaLink(String deltaLink) {
+		this.deltaLink = deltaLink;
+	}
+	public String getToken() {
+		return token;
+	}
+	public void setToken(String token) {
+		this.token = token;
 	}
 }

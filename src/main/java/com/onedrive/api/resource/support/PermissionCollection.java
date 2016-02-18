@@ -21,32 +21,18 @@
  *******************************************************************************/
 package com.onedrive.api.resource.support;
 
-import com.fasterxml.jackson.annotation.JacksonInject;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.onedrive.api.OneDrive;
+import java.util.List;
 
-public class ChangesItemList extends ItemList {
-	
-	@JsonProperty("@odata.deltaLink")
-	private String deltaLink;
-	@JsonProperty("@delta.token")
-	private String token;
-	
-	@JsonCreator
-	public ChangesItemList(@JacksonInject OneDrive oneDrive) {
-		super(oneDrive);
+import com.onedrive.api.resource.facet.Permission;
+
+public class PermissionCollection {
+	private List<Permission> value;
+
+	public List<Permission> getValue() {
+		return value;
 	}
-	public String getDeltaLink() {
-		return deltaLink;
-	}
-	public void setDeltaLink(String deltaLink) {
-		this.deltaLink = deltaLink;
-	}
-	public String getToken() {
-		return token;
-	}
-	public void setToken(String token) {
-		this.token = token;
+
+	public void setValue(List<Permission> value) {
+		this.value = value;
 	}
 }

@@ -21,7 +21,6 @@
  *******************************************************************************/
 package com.onedrive.api;
 
-import java.net.URI;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Date;
@@ -40,7 +39,6 @@ import org.springframework.security.oauth2.common.DefaultOAuth2RefreshToken;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.util.Assert;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.InjectableValues;
@@ -48,12 +46,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.onedrive.api.internal.InternalDateDeserializer;
-import com.onedrive.api.internal.InternalQueryParameterMap;
 import com.onedrive.api.internal.InternalResourceDetails;
 import com.onedrive.api.internal.InternalTokenServices;
 import com.onedrive.api.internal.MultipartRelatedHttpMessageConverter;
-import com.onedrive.api.resource.Drive;
-import com.onedrive.api.resource.support.DriveList;
+import com.onedrive.api.internal.OneDriveErrorHandler;
+import com.onedrive.api.request.DriveRequest;
+import com.onedrive.api.request.DriveCollectionRequest;
 import com.onedrive.api.support.AccessToken;
 import com.onedrive.api.support.AccessTokenListener;
 import com.onedrive.api.support.ClientCredential;
@@ -66,33 +64,19 @@ public class OneDrive {
 	public static final String MOBILE_REDIRECT_URI = "https://login.live.com/oauth20_desktop.srf";
 	public static final String API_URL = "https://api.onedrive.com/v1.0";
 	
-	public static final String PATH_SEPARATOR = "/";
-
+	@JsonIgnore
 	private RestTemplate restTemplate;
 	
-	private String id;
-	@JsonIgnore 
 	private ClientCredential clientCredential;
-	@JsonIgnore 
 	private String authorizationCode;
-	@JsonIgnore 
 	private List<String> scopes;
-	@JsonIgnore 
 	private Map<String, Object> additionalData;
-	@JsonIgnore 
 	private String redirectUri;
-	@JsonIgnore 
 	private AccessTokenListener accessTokenListener;
-	@JsonIgnore 
 	private AccessToken existingToken;
 	
-	@JsonIgnore 
+	@JsonIgnore
 	private ObjectMapper objectMapper;
-	
-	public OneDrive(String id, ClientCredential clientCredential, List<String> scopes, String redirectUri) {
-		this(clientCredential, scopes, redirectUri);
-		this.id = id;
-	}
 	
 	public OneDrive(ClientCredential clientCredential, List<String> scopes, String redirectUri) {
 		Assert.notEmpty(scopes, "At least one scope is required");
@@ -112,6 +96,7 @@ public class OneDrive {
 			accessTokenRequest.setPreservedState(new Object());
 			accessTokenRequest.setExistingToken(getOAuth2AccessToken());
 			restTemplate = new OAuth2RestTemplate(getResourceDetails(), new DefaultOAuth2ClientContext(accessTokenRequest));
+			restTemplate.setErrorHandler(new OneDriveErrorHandler(restTemplate.getMessageConverters()));
 			AccessTokenProviderChain provider = new AccessTokenProviderChain(Arrays.asList(new AuthorizationCodeAccessTokenProvider()));
 			provider.setClientTokenServices(new InternalTokenServices(this));
 			((OAuth2RestTemplate) restTemplate).setAccessTokenProvider(provider);
@@ -155,14 +140,6 @@ public class OneDrive {
 		return null;
 	}
 
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
-	
 	public String getAuthorizationCode() {
 		return authorizationCode;
 	}
@@ -210,41 +187,15 @@ public class OneDrive {
 		return objectMapper;
 	}
 
-
-	public Drive drive(){
-		return drive((Map<String,String>) null);
+	public DriveRequest drive(){
+		return new DriveRequest(this, API_URL + "/drive", null);
 	}
-	public Drive drive(Map<String,String> queryParameters){
-		Drive drive = getRestTemplate().getForObject(getUri(Drive.DEFAULT_DRIVE_PATH, queryParameters), Drive.class);
-		return drive;
-	}
-	public Drive drive(String driveId){
-		return drive(driveId, null);
-	}
-	public Drive drive(String driveId, Map<String,String> queryParameters){
+	public DriveRequest drives(String driveId){
 		Assert.hasText(driveId, "[driveId] is required");
-		Drive drive = getRestTemplate().getForObject(getUri(Drive.buildDrivePath(driveId), queryParameters), Drive.class);
-		return drive;
+		return new DriveRequest(this, API_URL + "/drives/" + driveId, null);
 	}
-	
-	public List<Drive> drives(){
-		return drives((Map<String,String>)null);
-	}
-	
-	public List<Drive> drives(Map<String,String> queryParameters){
-		DriveList drives = getRestTemplate().getForObject(getUri(Drive.DRIVES_PATH, queryParameters), DriveList.class);
-		return drives.getValue();
-	}
-	
-	
-	
-	@JsonIgnore
-	public URI getUri(String path, Map<String,String> queryParameters){
-		UriComponentsBuilder ucb = UriComponentsBuilder.fromUriString(API_URL).path(path);
-		if (queryParameters != null){
-			ucb.queryParams(new InternalQueryParameterMap(queryParameters));
-		}
-		return ucb.build().toUri();
+	public DriveCollectionRequest drives(){
+		return new DriveCollectionRequest(this, API_URL + "/drives", null);
 	}
 
 	public static void main(String[] args) throws ParseException {
@@ -253,31 +204,9 @@ public class OneDrive {
 				OneDrive.MOBILE_REDIRECT_URI);
 		oneDrive.setAuthorizationCode("Mcbeff780-5704-686a-3707-2ac01db5362c");
 		oneDrive.setAccessTokenListener(new SerializatorAccessTokenListener());
-		//Map<String,String> params = new HashMap<String, String>();
-		//params.put(QueryParameter.SELECT, "id,name");
-		System.out.println(oneDrive.drive("me"));
-		//System.out.println(oneDrive.drive("me").metadata());
-		//System.out.println(new Drive(oneDrive).metadata());
-		//System.out.println(new Drive(oneDrive).root());
-		//System.out.println(new Drive(oneDrive).specialFolder("documents"));
-		//System.out.println(new Drive(oneDrive).root("/personal/correo"));
-		//System.out.println(new Drive(oneDrive).items("C899E30C041941B5!197181", params));
-		//System.out.println(new Item(oneDrive, "C899E30C041941B5!127").metadata());
-		//System.out.println(new Item(oneDrive, "C899E30C041941B5!312603").metadata());
-		//System.out.println(new Item(oneDrive, "C899E30C041941B5!312345").metadata());
 		//System.out.println(new Item(oneDrive, "C899E30C041941B5!312603").move("/Pictures"));
-		//System.out.println(new Drive(oneDrive).root().metadata());
-		//System.out.println(new Drive(oneDrive).root().children(params));
-		//System.out.println(new Drive(oneDrive).root().children(params));
 		//Item item = new Drive(oneDrive).root().createFolder("cgg1");
-		//System.out.println(item);
-		/*
-		try {
-			System.out.println(new Item(oneDrive, "C899E30C041941B5!80220").upload("test.jpg", new FileInputStream("C:/Users/Carlos/Downloads/Conman5674dcd92584d815.jpg")));
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-		*/
+		
 		/*
 		try {
 			Item child = new Item(oneDrive);
@@ -342,31 +271,10 @@ public class OneDrive {
 		Item item = new Item(oneDrive, "C899E30C041941B5!311781");
 		System.out.println(item.copy("/Pictures", "copied-with-path.jpg"));
 		*/
-		/*
-		Item item = new Item(oneDrive, "C899E30C041941B5!8060");
-		try {
-			System.out.println(item.download(new FileOutputStream("C:/Users/carlos/Downloads/download-onedrive.jpg"), "bytes=0-5"));
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-		*/
+		
 		//System.out.println(new Drive(oneDrive).root().search("java").nextPage());
 		//System.out.println(new Drive(oneDrive).root().changes());
-		//System.out.println(new Item(oneDrive, "C899E30C041941B5!8060").thumbnails());
-		/*
-		try {
-			System.out.println(new Item(oneDrive, "C899E30C041941B5!8060").thumbnail("0", "small", new FileOutputStream("C:/Users/carlos/Downloads/download-thumb.jpg")));
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-		*/
-		/*
-		try {
-			new Item(oneDrive, "C899E30C041941B5!311781").thumbnailUpload(new FileInputStream("C:/Users/carlos/Downloads/447983.jpg"));
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		}
-		*/
+
 		//System.out.println(new Item(oneDrive, "C899E30C041941B5!312752").createLink(SharingLink.TYPE_VIEW));
 	}
 }

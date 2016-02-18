@@ -21,24 +21,26 @@
  *******************************************************************************/
 package com.onedrive.api.resource.support;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JacksonInject;
 import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.onedrive.api.OneDrive;
+import com.onedrive.api.resource.Resource;
 
-public class SearchItemList extends ItemList {
-	
-	@JsonProperty("@search.approximateCount")
-	private long approximateCount;
-	
+@JsonInclude(Include.NON_NULL)
+public class ThumbnailSetCollection extends Resource {
+	private List<ThumbnailSet> value;
 	@JsonCreator
-	public SearchItemList(@JacksonInject OneDrive oneDrive) {
+	public ThumbnailSetCollection(@JacksonInject OneDrive oneDrive) {
 		super(oneDrive);
 	}
-	public long getApproximateCount() {
-		return approximateCount;
+	public List<ThumbnailSet> getValue() {
+		return value;
 	}
-	public void setApproximateCount(long approximateCount) {
-		this.approximateCount = approximateCount;
+	public void setValue(List<ThumbnailSet> value) {
+		this.value = value;
 	}
 }
