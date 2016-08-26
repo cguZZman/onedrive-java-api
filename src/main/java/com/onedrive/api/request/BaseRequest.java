@@ -41,13 +41,15 @@ public class BaseRequest<T extends BaseRequest<?>> {
 	}
 	
 	protected URI buildUri(){
-		return buildUri(null);
+		return buildUri("");
 	}
 
 	protected URI buildUri(String childResource){
 		UriComponentsBuilder ucb = UriComponentsBuilder.fromUriString(url+childResource);
 		ucb.queryParams(queryParameters);
-		return ucb.build().toUri();
+		URI uri = ucb.build().toUri();
+		System.out.println(uri);
+		return uri;
 	}
 	
 	@SuppressWarnings("unchecked")

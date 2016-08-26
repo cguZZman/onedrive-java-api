@@ -42,7 +42,7 @@ public class ItemCollectionRequest extends FetchableRequest<ItemCollection, Item
 	
 	public AsyncOperationStatus upload(String itemName, String url){
 		Assert.notNull(url, "[url] is required");
-		Assert.notNull(itemName, "[name] is required");
+		Assert.notNull(itemName, "[itemName] is required");
 		Item item = new Item(getOneDrive());
 		item.setName(itemName);
 		item.setSourceUrl(url);

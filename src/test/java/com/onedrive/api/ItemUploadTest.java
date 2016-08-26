@@ -26,7 +26,7 @@ public class ItemUploadTest {
 		oneDrive = new OneDrive(new ClientCredential("0000000048145120"),
 				Arrays.asList(Scope.OFFLINE_ACCESS, "wl.skydrive", "wl.signin", "onedrive.readwrite"),
 				OneDrive.MOBILE_REDIRECT_URI);
-		oneDrive.setAuthorizationCode("M89ab534a-f3fe-b39e-eebe-bf2d1386ffca");
+		oneDrive.setAuthorizationCode("M62b3f60d-d2af-1aef-2716-d7be4ba4d2e3");
 		oneDrive.setAccessTokenListener(new SerializatorAccessTokenListener());
 	}
 	@Test
@@ -57,12 +57,12 @@ public class ItemUploadTest {
 	
 	@Test
 	public void uploadFromUrl() throws IOException {
-		AsyncOperationStatus monitor = oneDrive.drive().root().children()
-				.upload("thundercats8.jpg",
-						"http://news.thundercats.ws/wp-content/uploads/sites/6/2013/12/Thundercats.ws-Site-Relaunch.jpg");
+		AsyncOperationStatus monitor = oneDrive.drive().items("C899E30C041941B5!366541").children()
+			.upload("test.mp4",
+			"https://content-na.drive.amazonaws.com/cdproxy/templink/Hel2gRxW1AIr4rzg-FjP9is9ZBDvDmiaJ3AGB07aSxEE0Xnc3?download=TRUE");
 		while (StringUtils.isEmpty(monitor.getId())){
 			try {
-				Thread.sleep(1000);
+				Thread.sleep(5000);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
