@@ -33,6 +33,9 @@ public class ItemRequest extends FetchableRequest<Item, ItemRequest> {
 		} else {
 			url += ":";
 		}
+		if (itemPath.charAt(0) == '/') {
+			itemPath = itemPath.substring(1);
+		}
         return new ItemRequest(getOneDrive(), url + "/" + itemPath + ":", null);
     }
 	

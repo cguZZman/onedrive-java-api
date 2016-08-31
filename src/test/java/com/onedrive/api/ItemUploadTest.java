@@ -57,9 +57,9 @@ public class ItemUploadTest {
 	
 	@Test
 	public void uploadFromUrl() throws IOException {
-		AsyncOperationStatus monitor = oneDrive.drive().items("C899E30C041941B5!366541").children()
-			.upload("test.mp4",
-			"https://content-na.drive.amazonaws.com/cdproxy/templink/Hel2gRxW1AIr4rzg-FjP9is9ZBDvDmiaJ3AGB07aSxEE0Xnc3?download=TRUE");
+		AsyncOperationStatus monitor = oneDrive.drive().items("C899E30C041941B5!365211").children()
+			.upload("S04E14 - 056",
+			"https://content-na.drive.amazonaws.com/cdproxy/templink/xce23y96SZTQ2_1YpW_h6YSJXYRCKVBeQxo69PGjH08E0Xnc3?download=TRUE");
 		while (StringUtils.isEmpty(monitor.getId())){
 			try {
 				Thread.sleep(5000);

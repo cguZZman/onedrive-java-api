@@ -1,6 +1,7 @@
 package com.onedrive.api.request;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,9 +48,23 @@ public class BaseRequest<T extends BaseRequest<?>> {
 	protected URI buildUri(String childResource){
 		UriComponentsBuilder ucb = UriComponentsBuilder.fromUriString(url+childResource);
 		ucb.queryParams(queryParameters);
-		URI uri = ucb.build().toUri();
-		System.out.println(uri);
-		return uri;
+		try {
+			URI uri = new URI(ucb.build().encode().toString().replace("+", encodeChar('+')));
+			System.out.println(uri);
+			return uri;
+		} catch (URISyntaxException ex) {
+			throw new IllegalStateException("Could not create URI object: " + ex.getMessage(), ex);
+		}
+	}
+	
+	private String encodeChar(char c) {
+		StringBuffer sb = new StringBuffer("%");
+		byte b = (byte) c;
+		char hex1 = Character.toUpperCase(Character.forDigit((b >> 4) & 0xF, 16));
+		char hex2 = Character.toUpperCase(Character.forDigit(b & 0xF, 16));
+		sb.append(hex1);
+		sb.append(hex2);
+		return sb.toString();
 	}
 	
 	@SuppressWarnings("unchecked")
