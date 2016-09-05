@@ -21,6 +21,7 @@ import com.onedrive.api.resource.support.SearchItemCollection;
 
 public class ItemRequest extends FetchableRequest<Item, ItemRequest> {
 
+	public static final String PARENT_REFERENCE_PATH_PREFIX = "/drive/root:";
 	public ItemRequest(OneDrive oneDrive, String url, LinkedMultiValueMap<String, String> queryParameters) {
 		super(oneDrive, url, queryParameters);
 	}
@@ -92,7 +93,7 @@ public class ItemRequest extends FetchableRequest<Item, ItemRequest> {
 		Item request = new Item(getOneDrive());
 		request.setName(newName);
 		request.setParentReference(new ItemReference());
-		request.getParentReference().setPath("/drive/root:" + destinationFolder);
+		request.getParentReference().setPath(PARENT_REFERENCE_PATH_PREFIX + destinationFolder);
 		
 		return update(request); 
 	}
@@ -112,6 +113,12 @@ public class ItemRequest extends FetchableRequest<Item, ItemRequest> {
 		Item request = new Item(getOneDrive());
 		request.setName(newName);
 		request.setParentReference(parentReference);
+		if (!StringUtils.isEmpty(parentReference.getPath()) && !parentReference.getPath().startsWith(PARENT_REFERENCE_PATH_PREFIX)){
+			if (parentReference.getPath().equals("/")){
+				parentReference.setPath("");
+			}
+			parentReference.setPath(PARENT_REFERENCE_PATH_PREFIX + parentReference.getPath());
+		}
 		getHeaders().add("Prefer", "respond-async");
 		ResponseEntity<AsyncOperationStatus> response = getOneDrive().getRestTemplate().exchange(buildUri("/action.copy"), HttpMethod.POST, new HttpEntity<Item>(request, getHeaders()), AsyncOperationStatus.class);
 		AsyncOperationStatus status = response.getBody();
