@@ -33,6 +33,10 @@ import com.onedrive.api.OneDrive;
 public class Resource {
 	public static final String CONTENT_RANGE_HEADER = "Content-Range";
 	
+	public static final String CONFLICT_BEHAVIOR_FAIL = "fail";
+	public static final String CONFLICT_BEHAVIOR_REPLACE = "replace";
+	public static final String CONFLICT_BEHAVIOR_RENAME = "rename";
+	
 	private String id;
 	private String contentRange;
 	

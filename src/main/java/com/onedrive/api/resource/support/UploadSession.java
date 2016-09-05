@@ -91,7 +91,7 @@ public class UploadSession extends Resource {
 		ResponseEntity<UploadSession> response = getOneDrive().getRestTemplate().exchange(uploadUri(), HttpMethod.PUT, new HttpEntity<ByteArrayResource>(new ByteArrayResource(data), headers), UploadSession.class);
 		UploadSession session = response.getBody();
 		session.setUploadUrl(uploadUrl);
-		session.complete = response.getStatusCode().equals(HttpStatus.CREATED);
+		session.complete = response.getStatusCode().equals(HttpStatus.CREATED) || response.getStatusCode().equals(HttpStatus.OK);
 		return session;
 	}
 	public void delete(){
