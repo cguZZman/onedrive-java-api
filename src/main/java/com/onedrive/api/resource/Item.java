@@ -62,6 +62,7 @@ public class Item extends Resource {
 	private ItemReference parentReference;
 	private String webUrl;
 	private String description;
+	private String webDavUrl;
 	
 	/* Facets */
 	private Folder folder;
@@ -275,5 +276,11 @@ public class Item extends Resource {
 	}
 	public void setContext(String context) {
 		this.context = context;
+	}
+	public String getWebDavUrl() {
+		return webDavUrl;
+	}
+	public void setWebDavUrl(String webDavUrl) {
+		this.webDavUrl = webDavUrl;
 	}
 }

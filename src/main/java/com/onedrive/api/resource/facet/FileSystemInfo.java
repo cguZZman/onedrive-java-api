@@ -23,6 +23,10 @@ package com.onedrive.api.resource.facet;
 
 import java.util.Date;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
+@JsonInclude(Include.NON_NULL)
 public class FileSystemInfo {
 	private Date createdDateTime;
 	private Date lastModifiedDateTime;
