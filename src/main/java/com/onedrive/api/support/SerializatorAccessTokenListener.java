@@ -32,7 +32,7 @@ import org.springframework.util.SerializationUtils;
 import com.onedrive.api.OneDrive;
 
 public class SerializatorAccessTokenListener implements AccessTokenListener {
-	private static final String EMPTY_STRING = "";
+	protected static final String EMPTY_STRING = "";
 	protected static final String ACCESS_TOKEN_EXTENSION = ".atk";
 	protected static final String DEFAULT_ACCESS_TOKEN_FILE_NAME = "default";
 	private static final String DEFAULT_APPLICATION_FOLDER = System.getProperty("user.home", EMPTY_STRING)
@@ -43,9 +43,11 @@ public class SerializatorAccessTokenListener implements AccessTokenListener {
 	protected String getFileName(OneDrive reference){
 		return DEFAULT_ACCESS_TOKEN_FILE_NAME + ACCESS_TOKEN_EXTENSION;
 	}
-	
+	protected String getApplicationFolder(){
+		return DEFAULT_APPLICATION_FOLDER;
+	}
 	public void onAccessTokenReceived(OneDrive reference, AccessToken accessToken) {
-		File file = new File(DEFAULT_APPLICATION_FOLDER, getFileName(reference));
+		File file = new File(getApplicationFolder(), getFileName(reference));
 		String existing = tokens.get(file.getName());
 		if (existing == null || !existing.equals(accessToken.getAccessToken())){
 			try {
@@ -62,7 +64,7 @@ public class SerializatorAccessTokenListener implements AccessTokenListener {
 	}
 
 	public AccessToken onAccessTokenRequired(OneDrive reference) {
-		File file = new File(DEFAULT_APPLICATION_FOLDER, getFileName(reference));
+		File file = new File(getApplicationFolder(), getFileName(reference));
 		if (file.exists()){
 			try {
 				FileInputStream fis = new FileInputStream(file);
