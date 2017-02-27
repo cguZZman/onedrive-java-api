@@ -55,7 +55,10 @@ public class InternalTokenServices implements ClientTokenServices {
 
 	public void saveAccessToken(OAuth2ProtectedResourceDetails resource, Authentication authentication, OAuth2AccessToken accessToken) {
 		if (reference.getAccessTokenListener() != null){
-			AccessToken internalAccessToken = new AccessToken();
+			AccessToken internalAccessToken = reference.getExistingToken();
+			if (internalAccessToken == null) {
+				internalAccessToken = new AccessToken();
+			}
 			internalAccessToken.setAccessToken(accessToken.getValue());
 			internalAccessToken.setExpiration(accessToken.getExpiration());
 			internalAccessToken.setRefreshToken(accessToken.getRefreshToken().getValue());

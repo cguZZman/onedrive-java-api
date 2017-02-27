@@ -23,6 +23,7 @@ package com.onedrive.api.support;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Map;
 import java.util.Set;
 
 public class AccessToken implements Serializable {
@@ -33,6 +34,7 @@ public class AccessToken implements Serializable {
 	private Set<String> scope;
 	private String accessToken;
 	private String refreshToken;
+	private Map<String,String> properties;
 	
 	public String getTokenType() {
 		return tokenType;
