@@ -43,6 +43,8 @@ import com.onedrive.api.resource.facet.Location;
 import com.onedrive.api.resource.facet.Permission;
 import com.onedrive.api.resource.facet.Photo;
 import com.onedrive.api.resource.facet.Quota;
+import com.onedrive.api.resource.facet.RemoteItem;
+import com.onedrive.api.resource.facet.Shared;
 import com.onedrive.api.resource.facet.SharingLink;
 import com.onedrive.api.resource.facet.SpecialFolder;
 import com.onedrive.api.resource.facet.Video;
@@ -79,6 +81,8 @@ public class Item extends Resource {
 	private Quota quota;
 	private SharingLink sharingLink;
 	private SpecialFolder specialFolder;
+	private Shared shared;
+	private RemoteItem remoteItem;
 	
 	/*Instance Attributes*/
 	@JsonProperty("@name.conflictBehavior")
@@ -282,5 +286,17 @@ public class Item extends Resource {
 	}
 	public void setWebDavUrl(String webDavUrl) {
 		this.webDavUrl = webDavUrl;
+	}
+	public Shared getShared() {
+		return shared;
+	}
+	public void setShared(Shared shared) {
+		this.shared = shared;
+	}
+	public RemoteItem getRemoteItem() {
+		return remoteItem;
+	}
+	public void setRemoteItem(RemoteItem remoteItem) {
+		this.remoteItem = remoteItem;
 	}
 }
